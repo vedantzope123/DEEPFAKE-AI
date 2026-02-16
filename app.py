@@ -386,6 +386,7 @@ st.markdown("---")
 st.markdown("""
 <div style='text-align: center; color: #888;'>
     <p>🔍 Powered by Ved Industries </p>
+    <p> Colabrated With VGY NXT<p>
     <p>No data is stored or transmitted beyond the analysis session</p>
 </div>
 """, unsafe_allow_html=True)
