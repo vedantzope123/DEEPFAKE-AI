@@ -3,13 +3,26 @@ FastAPI Backend for Vercel Deployment
 Entry point for Vercel serverless functions
 """
 
+import sys
+import traceback
 from fastapi import FastAPI, File, UploadFile, HTTPException, Form
 from fastapi.middleware.cors import CORSMiddleware
-from google import genai
-from google.genai import types
 from pydantic import BaseModel
-from typing import Optional
+from typing import Optional, Any
 import io
+
+# Wrap imports in try-except for better error reporting
+genai: Any = None
+types: Any = None
+GENAI_AVAILABLE = False
+
+try:
+    from google import genai  # type: ignore
+    from google.genai import types  # type: ignore
+    GENAI_AVAILABLE = True
+except ImportError as e:
+    print(f"Warning: google-genai not available: {e}", file=sys.stderr)
+    GENAI_AVAILABLE = False
 
 app = FastAPI(title="Deepfake Detection API")
 
@@ -43,6 +56,8 @@ async def root():
         "message": "Deepfake Detection API - Powered by Gemini AI",
         "version": "1.0",
         "status": "running",
+        "genai_available": GENAI_AVAILABLE,
+        "python_version": sys.version,
         "endpoints": {
             "/analyze": "POST - Upload media for analysis",
             "/health": "GET - API health check",
@@ -76,31 +91,56 @@ async def analyze_media(
     - verdict, confidence, analysis, is_fake
     """
     
+    if not GENAI_AVAILABLE:
+        raise HTTPException(
+            status_code=503, 
+            detail="Gemini AI library not available. Please contact the administrator."
+        )
+    
     if not api_key:
         raise HTTPException(status_code=400, detail="API key is required")
     
     # Validate file type
-    allowed_types = ['image/jpeg', 'image/png', 'video/mp4', 'video/quicktime', 'video/x-msvideo']
+    allowed_types = ['image/jpeg', 'image/png', 'image/jpg', 'video/mp4', 'video/quicktime', 'video/x-msvideo']
     if file.content_type not in allowed_types:
-        raise HTTPException(status_code=400, detail=f"Unsupported file type: {file.content_type}")
+        raise HTTPException(status_code=400, detail=f"Unsupported file type: {file.content_type}. Allowed: {', '.join(allowed_types)}")
     
     try:
         # Read file bytes
         file_bytes = await file.read()
         
+        if len(file_bytes) == 0:
+            raise HTTPException(status_code=400, detail="Uploaded file is empty")
+        
         # Initialize Gemini client
-        client = genai.Client(api_key=api_key)
+        try:
+            client = genai.Client(api_key=api_key)
+        except Exception as e:
+            raise HTTPException(status_code=401, detail=f"Invalid API key: {str(e)}")
         
         # Call Gemini API
-        response = client.models.generate_content(
-            model="gemini-2.0-flash-exp",
-            contents=[
-                types.Part.from_bytes(data=file_bytes, mime_type=file.content_type),
-                FORENSIC_PROMPT
-            ]
-        )
+        try:
+            response = client.models.generate_content(
+                model="gemini-2.0-flash-exp",
+                contents=[
+                    types.Part.from_bytes(data=file_bytes, mime_type=file.content_type),
+                    FORENSIC_PROMPT
+                ]
+            )
+        except Exception as e:
+            # Try alternative model if the first one fails
+            try:
+                response = client.models.generate_content(
+                    model="gemini-1.5-flash",
+                    contents=[
+                        types.Part.from_bytes(data=file_bytes, mime_type=file.content_type),
+                        FORENSIC_PROMPT
+                    ]
+                )
+            except Exception as e2:
+                raise HTTPException(status_code=500, detail=f"Gemini API error: {str(e2)}")
         
-        result_text = response.text if response.text else "Analysis failed"
+        result_text = response.text if response.text else "Analysis failed - No response from AI"
         
         # Parse verdict
         is_fake = "FAKE" in result_text.upper()
@@ -123,7 +163,11 @@ async def analyze_media(
             is_fake=is_fake
         )
         
+    except HTTPException:
+        raise
     except Exception as e:
+        # Log the full traceback for debugging
+        traceback.print_exc()
         raise HTTPException(status_code=500, detail=f"Analysis failed: {str(e)}")
 
 @app.post("/analyze-with-key-header")

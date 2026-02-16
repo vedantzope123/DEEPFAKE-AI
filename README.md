@@ -1,19 +1,54 @@
 # 🛡️ Deepfake AI Detector
 
-A professional-grade deepfake detection tool powered by **Google Gemini 3 Flash API** and **Streamlit**. This application analyzes images and videos for signs of AI-generated manipulation using advanced forensic techniques.
+A professional-grade deepfake detection tool powered by **Google Gemini AI** with both **Web UI (Streamlit)** and **REST API (FastAPI)** for mobile/web integration.
 
-![Deepfake Detector](https://img.shields.io/badge/AI-Gemini%203%20Flash-blue)
-![Python](https://img.shields.io/badge/Python-3.8%2B-green)
+![Deepfake Detector](https://img.shields.io/badge/AI-Gemini%20Flash-blue)
+![Python](https://img.shields.io/badge/Python-3.11-green)
 ![Streamlit](https://img.shields.io/badge/Streamlit-1.0%2B-red)
+![FastAPI](https://img.shields.io/badge/FastAPI-0.104%2B-teal)
+![Vercel](https://img.shields.io/badge/Deploy-Vercel-black)
 
 ## ✨ Features
 
 - 🎥 **Video & Image Analysis** - Supports MP4, MOV, AVI, JPG, PNG formats
 - 🔍 **Forensic Detection** - Analyzes lighting, shadows, facial artifacts, and texture inconsistencies
-- 🧠 **AI-Powered Reasoning** - Uses Gemini 3's advanced reasoning capabilities
+- 🧠 **AI-Powered Reasoning** - Uses Gemini AI's advanced reasoning capabilities
 - 🚫 **Zero Database** - No data storage; all analysis happens in real-time
 - 📊 **Confidence Scoring** - Provides percentage-based confidence with detailed explanations
 - 🎨 **Modern UI** - Clean, professional interface with dark theme
+- 🌐 **REST API** - Deploy on Vercel for mobile app integration
+- 📱 **Mobile Ready** - Full API support for React Native, Flutter, iOS, Android
+
+## 🚀 Two Ways to Use:
+
+### 1️⃣ Web UI (Streamlit) - Local Use
+Perfect for desktop analysis and testing
+
+### 2️⃣ REST API (FastAPI) - Production Deployment
+Deploy to Vercel and integrate with mobile/web apps
+
+## 🌐 **QUICK DEPLOY TO VERCEL** ⚡
+
+**Your project is ready to deploy!**
+
+```bash
+# Install Vercel CLI
+npm install -g vercel
+
+# Deploy now
+cd "c:\Users\dell\OneDrive\Desktop\DEEPFAKE AI"
+vercel --prod
+```
+
+Or use GitHub + Vercel Dashboard (see [DEPLOY_NOW.md](DEPLOY_NOW.md))
+
+✅ **Fixed Issues:**
+- ✅ Runtime configuration added
+- ✅ Robust error handling
+- ✅ Compatible dependencies
+- ✅ Tested locally - works perfectly!
+
+📖 **Full deployment guide:** [DEPLOY_NOW.md](DEPLOY_NOW.md)
 
 ## 🔬 What It Detects
 
