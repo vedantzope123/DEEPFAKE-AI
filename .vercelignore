@@ -1,4 +1,6 @@
 app.py
+api_backend.py
+test_deployment.py
 __pycache__/
 *.pyc
 *.pyo
@@ -10,3 +12,7 @@ venv/
 .streamlit/
 *.log
 .DS_Store
+.git/
+.gitignore
+*.md
+requirements_api.txt
