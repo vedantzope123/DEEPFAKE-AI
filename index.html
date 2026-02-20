@@ -1,0 +1,92 @@
+<!doctype html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8" />
+  <meta name="viewport" content="width=device-width,initial-scale=1" />
+  <title>Deepfake Detector</title>
+  <style>
+    body { font-family: Arial, sans-serif; margin: 0; background: #f5f7fb; }
+    .wrap { max-width: 700px; margin: 40px auto; background: #fff; padding: 24px; border-radius: 12px; border: 1px solid #e4e7ee; }
+    h1 { margin-top: 0; }
+    label { display: block; margin: 12px 0 6px; }
+    input, button { width: 100%; padding: 10px; box-sizing: border-box; }
+    button { margin-top: 14px; cursor: pointer; }
+    .muted { color: #666; font-size: 14px; }
+    .ok { color: #0d7a31; }
+    .bad { color: #b00020; }
+    pre { white-space: pre-wrap; background: #f6f8fc; padding: 12px; border-radius: 8px; }
+  </style>
+</head>
+<body>
+  <div class="wrap">
+    <h1>Deepfake Detector</h1>
+    <p class="muted">Frontend is served as static page. API is called at <strong>/api/analyze</strong>.</p>
+
+    <label for="apiKey">Gemini API key</label>
+    <input id="apiKey" type="text" placeholder="AIza..." />
+
+    <label for="file">Image or video</label>
+    <input id="file" type="file" accept="image/*,video/*" />
+
+    <button id="analyzeBtn">Analyze</button>
+
+    <p id="status" class="muted"></p>
+    <pre id="out"></pre>
+
+    <p class="muted">
+      Health: <a href="/api/health" target="_blank">/api/health</a> |
+      API Docs: <a href="/api/docs" target="_blank">/api/docs</a>
+    </p>
+  </div>
+
+  <script>
+    const analyzeBtn = document.getElementById('analyzeBtn');
+    const statusEl = document.getElementById('status');
+    const outEl = document.getElementById('out');
+
+    analyzeBtn.addEventListener('click', async () => {
+      const apiKey = document.getElementById('apiKey').value.trim();
+      const fileInput = document.getElementById('file');
+      const file = fileInput.files && fileInput.files[0];
+
+      outEl.textContent = '';
+      statusEl.className = 'muted';
+
+      if (!apiKey) {
+        statusEl.textContent = 'Please enter API key.';
+        statusEl.className = 'bad';
+        return;
+      }
+      if (!file) {
+        statusEl.textContent = 'Please choose a file.';
+        statusEl.className = 'bad';
+        return;
+      }
+
+      const formData = new FormData();
+      formData.append('api_key', apiKey);
+      formData.append('file', file);
+
+      statusEl.textContent = 'Analyzing...';
+      try {
+        const res = await fetch('/api/analyze', { method: 'POST', body: formData });
+        const data = await res.json();
+        if (!res.ok) {
+          statusEl.textContent = data.detail || 'Request failed';
+          statusEl.className = 'bad';
+          outEl.textContent = JSON.stringify(data, null, 2);
+          return;
+        }
+
+        statusEl.textContent = `Verdict: ${data.verdict} (${data.confidence})`;
+        statusEl.className = data.is_fake ? 'bad' : 'ok';
+        outEl.textContent = JSON.stringify(data, null, 2);
+      } catch (err) {
+        statusEl.textContent = 'Network error';
+        statusEl.className = 'bad';
+        outEl.textContent = String(err);
+      }
+    });
+  </script>
+</body>
+</html>
